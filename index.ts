@@ -10,6 +10,9 @@ interface WeatherData {
   windSpeed: number;
   country: string;
   city: string;
+  dateTime: Date;
+  lon: number;  // New field for longitude
+  lat: number;  // New field for latitude
 }
 
 class WeatherApp {
@@ -38,7 +41,11 @@ class WeatherApp {
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
         country: data.sys.country,
-        city: data.name
+        city: data.name,
+        dateTime: new Date(data.dt * 1000),
+        lon: data.coord.lon,  // Get longitude from API response
+        lat: data.coord.lat   // Get latitude from API response
+
       };
     } catch (error) {
       console.error('Error fetching weather data:', error);
@@ -48,6 +55,8 @@ class WeatherApp {
 
   displayWeather(weather: WeatherData): void {
     console.log(`Weather for ${weather.city}, ${weather.country}:`);
+    console.log(`Date and Time: ${weather.dateTime.toLocaleString()}`);
+    console.log(`Coordinates: ${weather.lat}°N, ${weather.lon}°E`); 
     console.log(`Temperature: ${weather.temperature}°C`);
     console.log(`Description: ${weather.description}`);
     console.log(`Humidity: ${weather.humidity}%`);

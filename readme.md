@@ -54,81 +54,92 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface WeatherData {
-temperature: number;
-description: string;
-humidity: number;
-windSpeed: number;
-country: string;
-city: string;
+  temperature: number;
+  description: string;
+  humidity: number;
+  windSpeed: number;
+  country: string;
+  city: string;
+  dateTime: Date;
+  lon: number;  // New field for longitude
+  lat: number;  // New field for latitude
 }
 
 class WeatherApp {
-private apiKey: string;
-private baseUrl: string;
+  private apiKey: string;
+  private baseUrl: string;
 
-constructor() {
- this.apiKey = process.env.OPENWEATHERMAP_API_KEY || '';
- this.baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
-}
+  constructor() {
+    this.apiKey = process.env.OPENWEATHERMAP_API_KEY || '';
+    this.baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
+  }
 
-async getWeather(city: string): Promise<WeatherData> {
- try {
-   const response = await axios.get(this.baseUrl, {
-     params: {
-       q: city,
-       appid: this.apiKey,
-       units: 'metric'
-     }
-   });
+  async getWeather(city: string): Promise<WeatherData> {
+    try {
+      const response = await axios.get(this.baseUrl, {
+        params: {
+          q: city,
+          appid: this.apiKey,
+          units: 'metric'
+        }
+      });
 
-   const data = response.data;
-   return {
-     temperature: data.main.temp,
-     description: data.weather[0].description,
-     humidity: data.main.humidity,
-     windSpeed: data.wind.speed,
-     country: data.sys.country,
-     city: data.name
-   };
- } catch (error) {
-   console.error('Error fetching weather data:', error);
-   throw error;
- }
-}
+      const data = response.data;
+      return {
+        temperature: data.main.temp,
+        description: data.weather[0].description,
+        humidity: data.main.humidity,
+        windSpeed: data.wind.speed,
+        country: data.sys.country,
+        city: data.name,
+        dateTime: new Date(data.dt * 1000),
+        lon: data.coord.lon,  // Get longitude from API response
+        lat: data.coord.lat   // Get latitude from API response
 
-displayWeather(weather: WeatherData): void {
- console.log(`Weather for ${weather.city}, ${weather.country}:`);
- console.log(`Temperature: ${weather.temperature}°C`);
- console.log(`Description: ${weather.description}`);
- console.log(`Humidity: ${weather.humidity}%`);
- console.log(`Wind Speed: ${weather.windSpeed} m/s`);
-}
+      };
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      throw error;
+    }
+  }
+
+  displayWeather(weather: WeatherData): void {
+    console.log(`Weather for ${weather.city}, ${weather.country}:`);
+    console.log(`Date and Time: ${weather.dateTime.toLocaleString()}`);
+    console.log(`Coordinates: ${weather.lat}°N, ${weather.lon}°E`); 
+    console.log(`Temperature: ${weather.temperature}°C`);
+    console.log(`Description: ${weather.description}`);
+    console.log(`Humidity: ${weather.humidity}%`);
+    console.log(`Wind Speed: ${weather.windSpeed} m/s`);
+  }
 }
 
 async function run() {
-const weatherApp = new WeatherApp();
+  const weatherApp = new WeatherApp();
 
-try {
- const city = process.argv[2] || 'London';
- const weatherData = await weatherApp.getWeather(city);
- weatherApp.displayWeather(weatherData);
-} catch (error) {
- console.error('Failed to get weather data:', error);
-}
+  try {
+    const city = process.argv[2] || 'London';
+    const weatherData = await weatherApp.getWeather(city);
+    weatherApp.displayWeather(weatherData);
+  } catch (error) {
+    console.error('Failed to get weather data:', error);
+  }
 }
 
 run();
 
+```
 
 ## Usage
 
 To run the weather application:
-  npx ts-node index.ts
+
+ ``` npx ts-node index.ts ```
 
 This will display the weather for London (default city).
 To check the weather for a specific city:
 
-  npx ts-node index.ts "New York"
+  ```npx ts-node index.ts "New York" ```
 
 Replace "New York" with any city name of your choice.
 Dependencies
