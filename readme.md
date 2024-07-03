@@ -61,8 +61,10 @@ interface WeatherData {
   country: string;
   city: string;
   dateTime: Date;
-  lon: number;  // New field for longitude
-  lat: number;  // New field for latitude
+  lon: number;
+  lat: number;
+  icon: string;
+  day: string;  // New field for day of the week
 }
 
 class WeatherApp {
@@ -85,6 +87,7 @@ class WeatherApp {
       });
 
       const data = response.data;
+      const dateTime = new Date(data.dt * 1000);
       return {
         temperature: data.main.temp,
         description: data.weather[0].description,
@@ -92,10 +95,11 @@ class WeatherApp {
         windSpeed: data.wind.speed,
         country: data.sys.country,
         city: data.name,
-        dateTime: new Date(data.dt * 1000),
-        lon: data.coord.lon,  // Get longitude from API response
-        lat: data.coord.lat   // Get latitude from API response
-
+        dateTime: dateTime,
+        lon: data.coord.lon,
+        lat: data.coord.lat,
+        icon: this.getWeatherIcon(data.weather[0].id),
+        day: this.getDayName(dateTime)  // Get day name
       };
     } catch (error) {
       console.error('Error fetching weather data:', error);
@@ -103,12 +107,37 @@ class WeatherApp {
     }
   }
 
+  getWeatherIcon(conditionId: number): string {
+    if (conditionId >= 200 && conditionId < 300) {
+      return '⛈️';  // Thunderstorm
+    } else if (conditionId >= 300 && conditionId < 500) {
+      return '🌧️';  // Drizzle
+    } else if (conditionId >= 500 && conditionId < 600) {
+      return '🌧️';  // Rain
+    } else if (conditionId >= 600 && conditionId < 700) {
+      return '❄️';  // Snow
+    } else if (conditionId >= 700 && conditionId < 800) {
+      return '🌫️';  // Atmosphere (fog, mist, etc.)
+    } else if (conditionId === 800) {
+      return '☀️';  // Clear sky
+    } else if (conditionId > 800 && conditionId < 900) {
+      return '☁️';  // Clouds
+    } else {
+      return '🌡️';  // Default/unknown
+    }
+  }
+
+  getDayName(date: Date): string {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  }
+
   displayWeather(weather: WeatherData): void {
     console.log(`Weather for ${weather.city}, ${weather.country}:`);
+    console.log(`Day: ${weather.day}`);
     console.log(`Date and Time: ${weather.dateTime.toLocaleString()}`);
-    console.log(`Coordinates: ${weather.lat}°N, ${weather.lon}°E`); 
-    console.log(`Temperature: ${weather.temperature}°C`);
-    console.log(`Description: ${weather.description}`);
+    console.log(`Coordinates: ${weather.lat}°N, ${weather.lon}°E`);
+    console.log(`Weather Description: ${weather.icon} ${weather.temperature}°C - ${weather.description}`);
     console.log(`Humidity: ${weather.humidity}%`);
     console.log(`Wind Speed: ${weather.windSpeed} m/s`);
   }
@@ -127,6 +156,9 @@ async function run() {
 }
 
 run();
+
+
+
 
 ```
 
