@@ -14,7 +14,8 @@ interface WeatherData {
   lon: number;
   lat: number;
   icon: string;
-  day: string;  // New field for day of the week
+  day: string;
+  timezone: string;  // New field for timezone
 }
 
 class WeatherApp {
@@ -37,7 +38,7 @@ class WeatherApp {
       });
 
       const data = response.data;
-      const dateTime = new Date(data.dt * 1000);
+      const localTime = new Date(data.dt * 1000 + data.timezone * 1000);
       return {
         temperature: data.main.temp,
         description: data.weather[0].description,
@@ -45,11 +46,12 @@ class WeatherApp {
         windSpeed: data.wind.speed,
         country: data.sys.country,
         city: data.name,
-        dateTime: dateTime,
+        dateTime: localTime,
         lon: data.coord.lon,
         lat: data.coord.lat,
         icon: this.getWeatherIcon(data.weather[0].id),
-        day: this.getDayName(dateTime)  // Get day name
+        day: this.getDayName(localTime),
+        timezone: this.getTimezone(data.timezone)
       };
     } catch (error) {
       console.error('Error fetching weather data:', error);
@@ -82,12 +84,19 @@ class WeatherApp {
     return days[date.getDay()];
   }
 
+  getTimezone(offset: number): string {
+    const hours = Math.abs(Math.floor(offset / 3600));
+    const minutes = Math.abs(Math.floor((offset % 3600) / 60));
+    const sign = offset >= 0 ? '+' : '-';
+    return `UTC${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+
   displayWeather(weather: WeatherData): void {
     console.log(`Weather for ${weather.city}, ${weather.country}:`);
     console.log(`Day: ${weather.day}`);
-    console.log(`Date and Time: ${weather.dateTime.toLocaleString()}`);
+    console.log(`Local Time: ${weather.dateTime.toLocaleString()} (${weather.timezone})`);
     console.log(`Coordinates: ${weather.lat}°N, ${weather.lon}°E`);
-    console.log(`Weather Description: ${weather.temperature}°C - ${weather.description} ${weather.icon}`);
+    console.log(`${weather.temperature}°C - ${weather.description} ${weather.icon} `);
     console.log(`Humidity: ${weather.humidity}%`);
     console.log(`Wind Speed: ${weather.windSpeed} m/s`);
   }
